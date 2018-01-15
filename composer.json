@@ -1,0 +1,23 @@
+{
+	"name": "actom/loisium",
+	"description": " An open source framework for extracting the data you need from websites. ",
+	"version": "0.0.1",
+	"keywords": [
+		"spider", "crawler"
+	],
+	"license": "Apache License 2.0",
+	"authors": [
+		{
+			"name": "actom",
+			"email": "i@actom.me"
+		}
+	],
+	"require": {
+		"php": ">=7.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"loisium\\": "src/"
+		}
+	}
+}
