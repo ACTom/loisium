@@ -2,7 +2,10 @@
 
 require "vendor/autoload.php";
 
-use loisium\Spider;
+use loisium\Request, loisium\Response;
 
-$spider = new Spider();
-$spider->checkRequirement();
+$request = new Request();
+$response = $request->post('http://localhost:8000/', ['user' => 'admin', 'pass' => 'admin']);
+exit($response->getBody());
+var_dump($response);
+var_dump($request);
