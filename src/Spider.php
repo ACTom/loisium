@@ -2,20 +2,26 @@
 
 namespace loisium;
 
+use loisium\Cache\RedisCache;
+use loisium\Input\HttpInput;
+use loisium\Output\DbOutput;
+use loisium\Rule\ArticleRule;
+
 class Spider {
     private $config = null;
+    private $engine = null;
 
     public function __construct() {
         $this->config = new Config();
+        $this->engine = new Engine();
+        $this->engine->setInput(new HttpInput());
+        $this->engine->setOutput(new DbOutput());
+        $this->engine->setCache(new RedisCache(new Config($this->config->get('cache'))));
+        $this->engine->addRule(new ArticleRule(), 1);
+    }
 
-        $this->config->set('hello.world.what', 124);
-        $this->config->set('hello.world.cat', 125);
-        $this->config->set('hello.cat', 53);
-        $this->config->load(['hello'=>['world'=>['abc'=>'ccc'], 'what' => 555, 'aaa' => ['bbb' => 5557]]], false);
-        $this->config->load(['hello'=>['world'=>['abc'=>'ccc'], 'what' => 555, 'aaa1' => ['bbb' => 5587]]], true);
-        print_r($this->config->get(''));
-        print_r($this->config->get('hello'));
-        print_r($this->config->get('hello.world'));
+    public function run() {
+        $this->engine->start();
     }
 
     public function checkRequirement() {

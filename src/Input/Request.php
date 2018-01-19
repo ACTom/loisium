@@ -1,9 +1,9 @@
 <?php
 
-namespace loisium;
+namespace loisium\Input;
 
 
-class Request implements IRequest {
+class Request {
     private $timeout = 3000;
     private $connectTimeout = 3000;
     private $headers = [];

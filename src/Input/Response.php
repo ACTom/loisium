@@ -1,9 +1,9 @@
 <?php
 
-namespace loisium;
+namespace loisium\Input;
 
 
-class Response implements IResponse {
+class Response {
     private $url = '';
     private $body = '';
     private $contentType = '';

@@ -9,6 +9,10 @@ namespace loisium;
 class Config {
     private $data = [];
 
+    public function __construct($data = []) {
+        $this->data = $data;
+    }
+
     /**
      * 读取某项配置
      * @param string $key 配置名

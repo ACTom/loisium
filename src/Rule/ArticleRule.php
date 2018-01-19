@@ -9,6 +9,15 @@
 namespace loisium\Rule;
 
 
-class ArticleRule {
+class ArticleRule implements IRule {
+    private $ruleId = 1;
+
+    public function getRuleId(): int {
+        return $this->ruleId;
+    }
+
+    public function process(string &$source, &$data) {
+
+    }
 
 }
