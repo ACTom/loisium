@@ -14,59 +14,55 @@ class Engine {
     private $cache = null;
     private $rules = [];
     private $taskNum = 1;
-    private $taskId = 0;
+    private $taskId = '0';
+    private $workers = [];
+
+    public function __construct() {
+        $this->taskId = md5(uniqid());
+    }
 
     public function start() {
         assert($this->input instanceof IInput, new \UnexpectedValueException('输入器尚未初始化！'));
         assert($this->output instanceof IOutput, new \UnexpectedValueException('输出器尚未初始化！'));
         assert($this->cache instanceof ICache, new \UnexpectedValueException('缓存尚未初始化！'));
 
-        if ($this->taskId === 0) {
-            $this->taskId = md5(uniqid());
+        for ($i = 1; $i <= $this->taskNum; ++$i) {
+            $worker = new Worker($this);
+            $worker->setInput($this->input);
+            $worker->setOutput($this->output);
+            $worker->setCache($this->cache);
+            $worker->setRules($this->rules);
+            $worker->setWorkerId($i);
+            $worker->setTaskId($this->taskId);
+            $worker->start();
+            array_push($this->workers, $worker);
         }
 
-        for ($i = 1; $i <= $this->taskNum; ++$i) {
-            $this->setWorkerStatus($i, 1);
-            $this->worker($i);
+        while(!$this->isAllWorkerStopped()) {
+            usleep(100);
         }
+        $this->workers = [];
     }
 
-    private function setWorkerStatus(int $workerId, int $status) {
-        $this->cache->set("task{$workerId}", $status);
+    public function pushQueue(string $data) {
+        $this->cache->push($this->taskId, $data);
+    }
+
+    public function popQueue() {
+        return $this->cache->pop($this->taskId);
     }
 
     private function getWorkerStatus(int $workerId): int {
-        return (int)$this->cache->get("task{$workerId}");
+        return (int)$this->cache->get($this->taskId . "worker{$workerId}");
     }
 
-    private function isAllWorkerStopped() {
+    public function isAllWorkerStopped() {
         for ($i = 1; $i <= $this->taskNum; ++$i) {
-            if ($this->getWorkerStatus($i) === 1) {
+            if ($this->getWorkerStatus($i) === Worker::RUNNING) {
                 return false;
             }
         }
         return true;
-    }
-
-    public function worker($workerId) {
-        do {
-            $task = $this->cache->pop($this->taskId);
-            if ($task) {
-                $this->setWorkerStatus($workerId, 1);
-                $source = $this->input->get($task);
-                $data = [];
-                foreach ($this->rules as $rule) {
-                    $rule->process($source, $data);
-                }
-                $this->output->write($data);
-            } else {
-                $this->setWorkerStatus($workerId, 0);
-            }
-
-            if ($this->isAllWorkerStopped()) {
-                break;
-            }
-        } while (1);
     }
 
     /**
@@ -168,16 +164,16 @@ class Engine {
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getTaskId(): int {
+    public function getTaskId(): string {
         return $this->taskId;
     }
 
     /**
-     * @param int $taskId
+     * @param string $taskId
      */
-    public function setTaskId(int $taskId) {
+    public function setTaskId(string $taskId) {
         $this->taskId = $taskId;
     }
 
