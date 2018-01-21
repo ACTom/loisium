@@ -26,11 +26,8 @@ class Db extends PDO{
             throw new PDOException('未设置数据库配置！');
         }
         $this->config = array_merge($this->config, $configNew);
-        try {
-            parent::__construct($this->config['dsn'], $this->config['user'], $this->config['pass'], $this->config['driver_options']);
-        } catch (Exception $e) {
-            trigger_error('数据库连接失败：' . $e->getMessage(), E_USER_ERROR);
-        }
+
+        parent::__construct($this->config['dsn'], $this->config['user'], $this->config['pass'], $this->config['driver_options']);
     }
 
     /**
@@ -65,9 +62,10 @@ class Db extends PDO{
      * 数据库插入操作
      * @param string $table 待操作表名
      * @param array $data 待插入数据
+     * @param bool $replaceMode 是否使用REPLACE INTO 代替 INSERT INTO
      * @return bool|string 插入失败返回false,否则返回插入记录的自增值
      */
-    public function add(string $table, array $data) {
+    public function add(string $table, array $data, bool $replaceMode = false) {
         $fields = '';
         $values = '';
         foreach ($data as $key => $value) {
@@ -78,7 +76,8 @@ class Db extends PDO{
             $fields .= "`{$key}`";
             $values .= ":{$key}";
         }
-        $sql = "INSERT INTO `{$table}` ({$fields}) VALUES ({$values})";
+        $opera = $replaceMode ? 'REPLACE' : 'INSERT';
+        $sql = "{$opera} INTO `{$table}` ({$fields}) VALUES ({$values})";
         $stmt = $this->prepare($sql);
         foreach ($data as $key => $value) {
             $stmt->bindValue(":{$key}", $value);

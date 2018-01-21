@@ -12,6 +12,7 @@ namespace loisium\Rule;
 use DOMDocument;
 use DOMXPath;
 use loisium\Engine;
+use loisium\Item;
 
 class ArticleRule implements IRule {
     const LIST_URL = 1;
@@ -23,6 +24,7 @@ class ArticleRule implements IRule {
     private $source = '';
     private $content = '';
     private $xpath = null;
+    private $itemRules = [];
 
 
     public function __construct(Engine $engine) {
@@ -33,7 +35,7 @@ class ArticleRule implements IRule {
         return $this->ruleId;
     }
 
-    public function process(string $source, string &$content, &$data) {
+    public function process(string $source, string &$content, array &$data) {
         $this->source = trim($source);
         $this->content = $content;
 
@@ -43,6 +45,41 @@ class ArticleRule implements IRule {
         $this->xpath = new DOMXPath($doc);
 
         $this->parseUrl();
+        $this->parseData($data);
+    }
+
+    private function regexSelector($pattern) {
+        $matches = [];
+        if (preg_match($pattern, $this->content, $matches)) {
+            if (count($matches) > 1) {
+                return $matches[1];
+            }
+        }
+        return '';
+    }
+
+    private function xpathSelector($xpath) {
+        $data = $this->xpath->query($xpath);
+        if (count($data) > 0) {
+            return $data[0];
+        }
+        return '';
+    }
+
+    private function parseData(array &$data) {
+        $item = new Item();
+        foreach ($this->itemRules as $rule) {
+            switch ($rule['type']) {
+                case 'xpath':
+                    $item->{$rule['name']} = $this->xpathSelector($rule['selector']);
+                    break;
+                case 'regex':
+                default:
+                    $item->{$rule['name']} = $this->regexSelector($rule['selector']);
+                    break;
+            }
+        }
+        array_push($data, $item);
     }
 
     private function extendUrl(string $url) {
@@ -147,6 +184,20 @@ class ArticleRule implements IRule {
      */
     public function setArticleRegex(string $articleRegex) {
         $this->articleRegex = $articleRegex;
+    }
+
+    /**
+     * @return array
+     */
+    public function getItemRules(): array {
+        return $this->itemRules;
+    }
+
+    /**
+     * @param array $itemRules
+     */
+    public function setItemRules(array $itemRules) {
+        $this->itemRules = $itemRules;
     }
 
 }

@@ -16,6 +16,7 @@ class Request {
     private $url = '';
     private $parameters = [];
     private $lastResponse = null;
+    private $method = 'GET';
     private $curl = null;
 
     private function init() {
@@ -83,6 +84,17 @@ class Request {
         $this->lastResponse = new Response($this->curl);
         $this->afterRequest();
         return $this->lastResponse;
+    }
+
+    public function query(string $url = '', array $parameters = []) {
+        switch ($this->method) {
+            case 'GET':
+                return $this->get($url, $parameters);
+                break;
+            case 'POST':
+                return $this->post($url, $parameters);
+                break;
+        }
     }
 
     /**
@@ -284,6 +296,20 @@ class Request {
      */
     public function getLastResponse(): IResponse {
         return $this->lastResponse;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMethod(): string {
+        return $this->method;
+    }
+
+    /**
+     * @param string $method
+     */
+    public function setMethod(string $method) {
+        $this->method = $method;
     }
 
 }
